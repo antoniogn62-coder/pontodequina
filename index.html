@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#2d5008">
   <meta name="description" content="Dominó Ponto de Quina - jogo tradicional da Marinha do Brasil">
   <title>⚓ Ponto de Quina</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='2' width='20' height='28' rx='3' fill='%23faf8f0' stroke='%231a1a18' stroke-width='1.5'/%3E%3Cline x1='6' y1='16' x2='26' y2='16' stroke='%231a1a18' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='7' r='1.5' fill='%231a1a18'/%3E%3Ccircle cx='21' cy='7' r='1.5' fill='%231a1a18'/%3E%3Ccircle cx='16' cy='21' r='1.5' fill='%231a1a18'/%3E%3C/svg%3E">
@@ -55,6 +59,11 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      /* Suporte iPhone com notch / Dynamic Island */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
       background-image:
         radial-gradient(circle at 20% 30%, rgba(201, 142, 26, 0.04) 0%, transparent 50%),
         radial-gradient(circle at 80% 70%, rgba(24, 95, 165, 0.03) 0%, transparent 50%);
@@ -494,7 +503,7 @@
       border-radius: 3px;
     }
 
-    .tile--click { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .tile--click { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; touch-action: manipulation; }
     .tile--click:hover:not(.tile--disabled) {
       transform: translateY(-5px);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -561,6 +570,7 @@
       font-weight: 600;
       transition: all 0.15s;
       color: var(--color-text);
+      touch-action: manipulation;
     }
     .choice__buttons button:hover { border-color: var(--color-accent-gold); background: var(--color-surface-hover); }
     .choice__cancel { color: var(--color-text-muted) !important; }
@@ -576,6 +586,7 @@
       font-weight: 600;
       color: var(--color-text);
       transition: all 0.15s;
+      touch-action: manipulation;
     }
     .ctrl-btn:hover:not(:disabled) { border-color: var(--color-accent-gold); }
     .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -646,17 +657,186 @@
       cursor: pointer;
       border: none;
       transition: transform 0.1s, box-shadow 0.15s;
+      touch-action: manipulation;
+      font-family: inherit;
     }
     .modal__btn--primary { background: var(--color-accent-us); color: white; box-shadow: 0 2px 6px rgba(24, 95, 165, 0.3); }
     .modal__btn--primary:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(24, 95, 165, 0.4); }
     .modal__btn--secondary { background: transparent; color: var(--color-text-muted); border: 1px solid var(--color-border); }
     .modal__btn--secondary:hover { background: var(--color-surface-hover); }
 
-    @media (max-width: 480px) {
-      .game-screen__title { font-size: 15px; }
-      .game-screen__table { padding: 12px 8px; border-width: 6px; }
-      .game-screen__table-row--middle { gap: 4px; }
-      .scoreboard__value { font-size: 26px; }
+    /* ============================================================
+       MOBILE - layout de tela cheia sem scroll
+       ============================================================ */
+    @media (max-width: 600px) {
+
+      html, body { overflow: hidden; height: 100%; }
+
+      /* MENU */
+      .menu { padding: 32px 20px; justify-content: center; }
+      .menu__title { font-size: 52px; }
+      .menu__subtitle { margin-bottom: 32px; }
+      .menu__actions { max-width: 100%; }
+      .menu__btn { padding: 16px 20px; font-size: 15px; }
+      .menu__btn--primary { padding: 18px 20px; }
+
+      /* REGRAS */
+      .rules { padding: 16px 16px 60px; }
+      .rules__title { font-size: 24px; }
+
+      /* TELA DO JOGO — ocupa toda viewport sem scroll */
+      .game-screen {
+        padding: 8px 8px 0;
+        height: 100dvh;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: unset;
+      }
+
+      /* HEADER menor */
+      .game-screen__header { margin-bottom: 6px; }
+      .game-screen__title { font-size: 14px; }
+      .game-screen__back { width: 32px; height: 32px; font-size: 14px; }
+
+      /* PLACAR compacto lado a lado */
+      .scoreboard { gap: 6px; margin-bottom: 6px; }
+      .scoreboard__card { padding: 6px 10px; border-radius: 10px; }
+      .scoreboard__label { font-size: 9px; }
+      .scoreboard__value { font-size: 22px; margin: 2px 0; }
+      .scoreboard__target { font-size: 9px; margin-bottom: 4px; }
+      .scoreboard__bar { height: 3px; }
+
+      /* STATUS menor */
+      .game-screen__status { margin-bottom: 6px; padding: 0 2px; }
+      .game-screen__chip { font-size: 10px; padding: 3px 7px; }
+      .game-screen__turn { font-size: 13px; }
+
+      /* MESA ocupa o espaço disponível */
+      .game-screen__table {
+        flex: 1;
+        padding: 8px 6px;
+        border-width: 5px;
+        border-radius: 12px;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 0;
+      }
+
+      /* Linha do Norte */
+      .game-screen__table-row--top {
+        min-height: 36px;
+        padding-bottom: 4px;
+      }
+
+      /* Linha do meio - mesa + laterais */
+      .game-screen__table-row--middle {
+        flex: 1;
+        gap: 4px;
+        min-height: 0;
+        padding: 3px 0;
+      }
+
+      .game-screen__board-wrap {
+        min-height: 0;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Board menor no mobile */
+      .board { gap: 3px; padding: 4px; min-height: 60px; }
+      .board__line { gap: 2px; }
+      .board__empty { font-size: 12px; padding: 14px 0; }
+
+      /* Pontas */
+      .game-screen__ends { gap: 8px; margin-top: 5px; flex-wrap: nowrap; }
+      .game-screen__end { font-size: 10px; }
+      .game-screen__end strong { font-size: 12px; }
+      .game-screen__sum { font-size: 10px; padding: 3px 8px; }
+
+      /* Oponentes menores */
+      .opp__label { font-size: 9px; letter-spacing: 0; }
+      .opp--horizontal { min-height: 36px; padding: 2px 0; }
+      .opp--vertical { max-width: 38px; }
+      .opp__thinking span { width: 5px; height: 5px; }
+      .opp__crown { font-size: 11px; }
+
+      /* Pedras de costas menores */
+      .tile--back.tile--sm { width: 18px; height: 36px; }
+      .tile--back.tile--sm.tile--h { width: 36px; height: 18px; }
+
+      /* LOG mínimo */
+      .game-screen__log {
+        font-size: 11px;
+        min-height: 24px;
+        padding: 3px 8px;
+        line-height: 1.3;
+      }
+
+      /* MÃO DO JOGADOR - fixada na base, pedras maiores pra toque */
+      .player-hand {
+        padding: 6px 0 8px;
+        flex-shrink: 0;
+      }
+      .player-hand__label { font-size: 10px; margin-bottom: 5px; }
+      .player-hand__tiles {
+        gap: 5px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+        justify-content: center;
+        min-height: 52px;
+      }
+
+      /* Pedras da mão no mobile: tamanho bom pro toque */
+      .player-hand__tiles .tile--md .tile__half { width: 26px; height: 26px; }
+      .player-hand__tiles .tile--md .tile__pips { width: 19px; height: 19px; }
+      .player-hand__tiles .tile--md .tile__pip { width: 4px; height: 4px; }
+
+      /* Hover virou tap no mobile */
+      .tile--click:hover:not(.tile--disabled) { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.45); }
+      .tile--click:active:not(.tile--disabled) {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+      }
+      .tile--selected {
+        transform: translateY(-5px) scale(1.05);
+      }
+
+      /* CHOICE - escolha de lado */
+      .choice { padding: 10px; margin: 4px 0; border-radius: 10px; }
+      .choice__label { font-size: 12px; margin-bottom: 7px; }
+      .choice__buttons button { padding: 10px 12px; font-size: 13px; min-height: 44px; }
+
+      /* CONTROLES */
+      .controls { margin-top: 6px; padding-bottom: 8px; }
+      .ctrl-btn {
+        padding: 12px 28px;
+        font-size: 15px;
+        border-radius: 12px;
+        min-height: 48px;
+      }
+
+      /* MODAL */
+      .modal { padding: 22px 18px 16px; border-radius: 14px; }
+      .modal h3 { font-size: 19px; }
+      .modal p { font-size: 13px; margin-bottom: 18px; }
+      .modal__btn { padding: 12px 20px; font-size: 14px; min-height: 48px; }
+
+      /* FLASH de pontos */
+      .points-flash { font-size: 20px; padding: 10px 20px; }
+    }
+
+    /* Telas muito pequenas (< 360px) */
+    @media (max-width: 360px) {
+      .scoreboard__value { font-size: 18px; }
+      .player-hand__tiles .tile--md .tile__half { width: 22px; height: 22px; }
+      .player-hand__tiles .tile--md .tile__pips { width: 16px; height: 16px; }
+      .player-hand__tiles .tile--md .tile__pip { width: 3px; height: 3px; }
     }
 
     .opp__header {

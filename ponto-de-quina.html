@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Dominó Ponto de Quina - jogo tradicional da Marinha do Brasil">
+  <title>⚓ Ponto de Quina</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='2' width='20' height='28' rx='3' fill='%23faf8f0' stroke='%231a1a18' stroke-width='1.5'/%3E%3Cline x1='6' y1='16' x2='26' y2='16' stroke='%231a1a18' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='7' r='1.5' fill='%231a1a18'/%3E%3Ccircle cx='21' cy='7' r='1.5' fill='%231a1a18'/%3E%3Ccircle cx='16' cy='21' r='1.5' fill='%231a1a18'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       VARIÁVEIS E RESET
+       ============================================================ */
+    :root {
+      --color-bg: #f5f1e8;
+      --color-surface: #ffffff;
+      --color-surface-hover: #f0ebdd;
+      --color-text: #1a1a18;
+      --color-text-muted: #5f5e5a;
+      --color-text-faint: #999791;
+      --color-border: rgba(0, 0, 0, 0.12);
+      --color-accent-us: #185fa5;
+      --color-accent-them: #a32d2d;
+      --color-accent-gold: #c98e1a;
+      --color-success: #27500a;
+      --color-bar-bg: rgba(0, 0, 0, 0.08);
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1a1815;
+        --color-surface: #25221d;
+        --color-surface-hover: #2f2c26;
+        --color-text: #f5f1e8;
+        --color-text-muted: #a8a39a;
+        --color-text-faint: #6f6a62;
+        --color-border: rgba(255, 255, 255, 0.1);
+        --color-bar-bg: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0; padding: 0;
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(201, 142, 26, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(24, 95, 165, 0.03) 0%, transparent 50%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-image:
+          radial-gradient(circle at 20% 30%, rgba(201, 142, 26, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(24, 95, 165, 0.05) 0%, transparent 50%);
+      }
+    }
+
+    button { font-family: inherit; }
+    button:focus-visible { outline: 2px solid var(--color-accent-gold); outline-offset: 2px; }
+
+    /* ============================================================
+       TELAS - MENU / REGRAS
+       ============================================================ */
+    .screen { min-height: 100vh; }
+
+    .menu {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at top, rgba(253, 184, 19, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(59, 109, 17, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .menu__badge {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--color-accent-gold);
+      background: rgba(253, 184, 19, 0.1);
+      border: 1px solid rgba(253, 184, 19, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+
+    .menu__title {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 12vw, 88px);
+      font-weight: 900;
+      line-height: 0.9;
+      margin: 0 0 16px;
+      letter-spacing: -2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .menu__title em {
+      color: var(--color-accent-gold);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .menu__subtitle {
+      font-size: 15px;
+      color: var(--color-text-muted);
+      margin: 0 0 48px;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.5px;
+    }
+
+    .menu__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .menu__btn {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+    }
+
+    .menu__btn:hover:not(:disabled) {
+      border-color: var(--color-accent-gold);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu__btn--primary {
+      background: linear-gradient(135deg, #3b6d11 0%, #27500a 100%);
+      color: white;
+      border-color: #173404;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(39, 80, 10, 0.3);
+    }
+
+    .menu__btn--primary:hover {
+      border-color: var(--color-accent-gold);
+      box-shadow: 0 8px 20px rgba(39, 80, 10, 0.4);
+    }
+
+    .menu__btn-label { font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+    .menu__btn-hint { font-size: 11px; font-weight: 400; opacity: 0.85; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    .menu__btn--disabled { opacity: 0.5; cursor: not-allowed; display: flex; justify-content: space-between; align-items: center; }
+    .menu__soon { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-faint); font-weight: 500; }
+
+    .menu__footer {
+      margin-top: 48px;
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--color-text-faint);
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* REGRAS */
+    .rules { max-width: 640px; margin: 0 auto; padding: 24px 20px 80px; }
+    .rules__header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .rules__back {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .rules__back:hover { border-color: var(--color-accent-gold); color: var(--color-text); }
+    .rules__title { font-family: var(--font-display); font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .rules__content { display: flex; flex-direction: column; gap: 20px; }
+    .rules__section {
+      background: var(--color-surface);
+      border-radius: 12px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--color-accent-gold);
+    }
+    .rules__section h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 10px; font-weight: 700; }
+    .rules__section p { margin: 0 0 8px; line-height: 1.6; font-size: 14px; }
+    .rules__section p:last-child { margin-bottom: 0; }
+    .rules__list { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
+    .rules__list li { background: var(--color-bg); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: var(--font-mono); }
+    .rules__cta {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      background: linear-gradient(135deg, #3b6d11 0%, #27500a 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(39, 80, 10, 0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .rules__cta:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(39, 80, 10, 0.4); }
+
+    /* ============================================================
+       TELA DO JOGO
+       ============================================================ */
+    .game-screen {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 14px 40px;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .game-screen__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+
+    .game-screen__back {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--color-text);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .game-screen__back:hover { border-color: var(--color-accent-gold); background: var(--color-surface-hover); }
+    .game-screen__title { font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+
+    /* PLACAR */
+    .scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .scoreboard__card {
+      background: var(--color-surface);
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .scoreboard__card--us { border: 2px solid var(--color-accent-us); }
+    .scoreboard__card--them { border: 2px solid var(--color-accent-them); }
+    .scoreboard__label { font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+    .scoreboard__value { font-size: 32px; font-weight: 800; line-height: 1; margin: 4px 0; font-feature-settings: 'tnum'; }
+    .scoreboard__target { font-size: 10px; color: var(--color-text-faint); margin-bottom: 8px; }
+    .scoreboard__bar { height: 5px; background: var(--color-bar-bg); border-radius: 3px; overflow: hidden; }
+    .scoreboard__bar-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .scoreboard__bar-fill--us { background: var(--color-accent-us); }
+    .scoreboard__bar-fill--them { background: var(--color-accent-them); }
+
+    .game-screen__status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .game-screen__chip {
+      background: var(--color-surface);
+      color: var(--color-text-muted);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-mono);
+    }
+    .game-screen__turn { font-weight: 700; font-size: 14px; }
+
+    /* MESA DE GRAMADO */
+    .game-screen__table {
+      background:
+        repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0 2px, transparent 2px 7px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 7px),
+        radial-gradient(ellipse at center, #4a8a18 0%, #2d5008 100%);
+      border-radius: 16px;
+      padding: 16px 12px;
+      margin-bottom: 12px;
+      border: 8px solid #3a1f0a;
+      box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.05),
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .game-screen__table::before, .game-screen__table::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #d4a76a 0%, #6b4515 100%);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      top: 6px;
+    }
+    .game-screen__table::before { left: 6px; }
+    .game-screen__table::after { right: 6px; }
+
+    .game-screen__table-row { display: flex; align-items: center; justify-content: center; }
+    .game-screen__table-row--top { min-height: 50px; padding-bottom: 8px; }
+    .game-screen__table-row--middle { gap: 8px; min-height: 150px; padding: 6px 0; }
+    .game-screen__board-wrap { flex: 1; display: flex; justify-content: center; align-items: center; }
+
+    .game-screen__ends { display: flex; justify-content: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+    .game-screen__end {
+      color: #eaf3de;
+      font-size: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .game-screen__end strong { font-size: 14px; color: white; font-family: var(--font-mono); }
+    .game-screen__sum {
+      background: rgba(0, 0, 0, 0.4);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      letter-spacing: 0.3px;
+      font-family: var(--font-mono);
+    }
+    .game-screen__sum--quina {
+      background: linear-gradient(135deg, #ba7517 0%, #854f0b 100%);
+      border-color: #fdb813;
+      animation: quina-glow 1.5s ease-in-out infinite;
+    }
+    @keyframes quina-glow {
+      0%, 100% { box-shadow: 0 0 12px rgba(253, 184, 19, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(253, 184, 19, 0.8); }
+    }
+
+    /* OPONENTES */
+    .opp { display: flex; align-items: center; gap: 6px; transition: opacity 0.3s ease; }
+    .opp--horizontal { flex-direction: row; justify-content: center; min-height: 50px; padding: 4px 0; }
+    .opp--vertical { flex-direction: column; justify-content: center; align-items: center; max-width: 50px; }
+    .opp__label {
+      font-size: 11px;
+      color: #eaf3de;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .opp--horizontal .opp__label { min-width: 70px; }
+    .opp__tiles { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+    .opp--vertical .opp__tiles { flex-direction: column; }
+    .opp--active .opp__label {
+      color: #fdb813;
+      text-shadow: 0 0 8px rgba(253, 184, 19, 0.6);
+      animation: turn-glow 1.5s ease-in-out infinite;
+    }
+    @keyframes turn-glow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* BOARD */
+    .board {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      min-height: 140px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .board--empty { justify-content: center; }
+    .board__empty {
+      color: #eaf3de;
+      font-size: 14px;
+      text-align: center;
+      padding: 30px 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .board__empty span { font-size: 11px; opacity: 0.7; }
+    .board__line { display: flex; align-items: center; justify-content: center; gap: 2px; flex-wrap: nowrap; }
+
+    /* PEDRA */
+    .tile {
+      display: inline-flex;
+      background: linear-gradient(135deg, #faf8f0 0%, #e8e4d4 100%);
+      border: 1px solid #1a1a18;
+      border-radius: 5px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+    .tile--h { flex-direction: row; }
+    .tile--v { flex-direction: column; }
+
+    .tile--xs .tile__half { width: 18px; height: 18px; }
+    .tile--sm .tile__half { width: 22px; height: 22px; }
+    .tile--md .tile__half { width: 30px; height: 30px; }
+    .tile--lg .tile__half { width: 38px; height: 38px; }
+
+    .tile--v .tile__half:first-child { border-bottom: 1.5px solid #1a1a18; }
+    .tile--h .tile__half:first-child { border-right: 1.5px solid #1a1a18; }
+
+    .tile__half { display: flex; align-items: center; justify-content: center; }
+    .tile__pips { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 1px; }
+    .tile--xs .tile__pips { width: 13px; height: 13px; }
+    .tile--sm .tile__pips { width: 16px; height: 16px; }
+    .tile--md .tile__pips { width: 22px; height: 22px; }
+    .tile--lg .tile__pips { width: 28px; height: 28px; }
+
+    .tile__pip {
+      border-radius: 50%;
+      background: #1a1a18;
+      align-self: center;
+      justify-self: center;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+    }
+    .tile--xs .tile__pip { width: 3px; height: 3px; }
+    .tile--sm .tile__pip { width: 4px; height: 4px; }
+    .tile--md .tile__pip { width: 5px; height: 5px; }
+    .tile--lg .tile__pip { width: 7px; height: 7px; }
+    .tile__pip--inv { visibility: hidden; }
+
+    .tile--back {
+      background: linear-gradient(135deg, #2c2c2a 0%, #14140f 100%);
+      border-color: #000;
+    }
+    .tile--back.tile--sm { width: 22px; height: 44px; }
+    .tile--back.tile--sm.tile--h { width: 44px; height: 22px; }
+    .tile--back::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+    }
+
+    .tile--click { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .tile--click:hover:not(.tile--disabled) {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .tile--selected {
+      background: linear-gradient(135deg, #fff9e6 0%, #ffd700 100%);
+      border-color: #c19a00;
+      transform: translateY(-6px);
+      box-shadow: 0 6px 14px rgba(193, 154, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    .tile--disabled { opacity: 0.4; cursor: not-allowed; }
+    .tile--last { animation: tile-pulse 1.4s ease-out; }
+    @keyframes tile-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(253, 184, 19, 0.9), 0 2px 4px rgba(0, 0, 0, 0.45); }
+      60% { box-shadow: 0 0 0 12px rgba(253, 184, 19, 0), 0 2px 4px rgba(0, 0, 0, 0.45); }
+      100% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8); }
+    }
+
+    /* LOG E AÇÕES */
+    .game-screen__log {
+      text-align: center;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      min-height: 34px;
+      padding: 8px 12px;
+      line-height: 1.5;
+    }
+
+    .player-hand { padding: 12px 0; }
+    .player-hand__label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .player-hand__tiles { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 60px; }
+    .player-hand--empty { display: flex; justify-content: center; align-items: center; min-height: 80px; font-size: 16px; color: var(--color-success); font-weight: 600; }
+
+    .choice {
+      background: var(--color-surface);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 8px 0;
+      text-align: center;
+      border: 1px solid var(--color-accent-gold);
+      animation: choice-in 0.25s ease-out;
+    }
+    @keyframes choice-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .choice__label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 10px; font-weight: 600; }
+    .choice__buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .choice__buttons button {
+      padding: 8px 14px;
+      font-size: 13px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+      color: var(--color-text);
+    }
+    .choice__buttons button:hover { border-color: var(--color-accent-gold); background: var(--color-surface-hover); }
+    .choice__cancel { color: var(--color-text-muted) !important; }
+
+    .controls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .ctrl-btn {
+      padding: 10px 22px;
+      font-size: 14px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--color-text);
+      transition: all 0.15s;
+    }
+    .ctrl-btn:hover:not(:disabled) { border-color: var(--color-accent-gold); }
+    .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ctrl-btn--primary { background: var(--color-accent-us); color: white; border-color: var(--color-accent-us); }
+    .ctrl-btn--primary:hover:not(:disabled) { background: #0c447c; border-color: #0c447c; }
+
+    /* FLASH DE PONTOS */
+    .points-flash {
+      position: fixed;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 24px;
+      font-weight: 800;
+      pointer-events: none;
+      z-index: 999;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      animation: points-flash 1.5s ease-out forwards;
+      font-family: var(--font-display);
+      letter-spacing: 0.5px;
+    }
+    .points-flash--us { background: linear-gradient(135deg, #185fa5 0%, #0c447c 100%); }
+    .points-flash--them { background: linear-gradient(135deg, #a32d2d 0%, #791f1f 100%); }
+    @keyframes points-flash {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+      100% { opacity: 0; transform: translate(-50%, -90%) scale(1); }
+    }
+
+    /* MODAL */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      animation: backdrop-in 0.2s ease-out;
+    }
+    @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--color-surface);
+      border-radius: 16px;
+      padding: 28px 24px 20px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      animation: modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal h3 { margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: var(--font-display); }
+    .modal p { margin: 0 0 24px; font-size: 14px; color: var(--color-text-muted); line-height: 1.6; }
+    .modal__actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .modal__btn {
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    .modal__btn--primary { background: var(--color-accent-us); color: white; box-shadow: 0 2px 6px rgba(24, 95, 165, 0.3); }
+    .modal__btn--primary:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(24, 95, 165, 0.4); }
+    .modal__btn--secondary { background: transparent; color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .modal__btn--secondary:hover { background: var(--color-surface-hover); }
+
+    @media (max-width: 480px) {
+      .game-screen__title { font-size: 15px; }
+      .game-screen__table { padding: 12px 8px; border-width: 6px; }
+      .game-screen__table-row--middle { gap: 4px; }
+      .scoreboard__value { font-size: 26px; }
+    }
+
+    .opp__header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .opp--vertical .opp__header {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .opp__crown {
+      font-size: 14px;
+      line-height: 1;
+      animation: crown-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 0 4px rgba(253, 184, 19, 0.8));
+    }
+
+    @keyframes crown-pop {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+    }
+
+    .opp__passes {
+      font-size: 10px;
+      color: #f09595;
+      font-weight: 600;
+      background: rgba(163, 45, 45, 0.25);
+      padding: 1px 5px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.3px;
+    }
+
+    .player-passes {
+      font-size: 10px;
+      color: #f09595;
+      font-weight: 600;
+      background: rgba(163, 45, 45, 0.2);
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      margin-left: 4px;
+    }
+
+    /* Bolinhas animadas ao lado do label do oponente */
+    .opp__thinking {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 0;
+    }
+
+    .opp__thinking span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-accent-gold);
+      animation: dot-bounce 1.2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .opp__thinking span:nth-child(1) { animation-delay: 0s; }
+    .opp__thinking span:nth-child(2) { animation-delay: 0.2s; }
+    .opp__thinking span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dot-bounce {
+      0%, 60%, 100% { transform: translateY(0);    opacity: 0.35; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* Versão vertical (leste/oeste): bolinhas em coluna */
+    .opp--vertical .opp__thinking {
+      flex-direction: column;
+      gap: 3px;
+      padding: 2px 0;
+    }
+
+    .opp--vertical .opp__thinking span {
+      width: 6px;
+      height: 6px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ============================================================
+    // CONSTANTES
+    // ============================================================
+    const PIP_POSITIONS = {
+      0: [], 1: [4], 2: [0,8], 3: [0,4,8], 4: [0,2,6,8],
+      5: [0,2,4,6,8], 6: [0,2,3,5,6,8]
+    };
+    const PLAYERS = ['south', 'west', 'north', 'east'];
+    const TEAM = { south: 'us', north: 'us', east: 'them', west: 'them' };
+    const NAME = { south: 'Você', north: 'Norte', east: 'Leste', west: 'Oeste' };
+    const TARGET_SCORE = 30;
+
+    // ============================================================
+    // ESTADO GLOBAL
+    // ============================================================
+    let currentScreen = 'menu';
+    let S = null;
+    let handNum = 1;
+    let lastHandWinner = null;
+    let prevScores = { us: 0, them: 0 };
+
+    // ============================================================
+    // ENGINE - lógica pura do jogo
+    // ============================================================
+    function createDominoes() {
+      const t = [];
+      for (let i = 0; i <= 6; i++) for (let j = i; j <= 6; j++) t.push([i, j]);
+      return t;
+    }
+
+    function shuffle(a) {
+      const r = [...a];
+      for (let i = r.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [r[i], r[j]] = [r[j], r[i]];
+      }
+      return r;
+    }
+
+    function dealTiles() {
+      const t = shuffle(createDominoes());
+      return {
+        south: t.slice(0, 7),
+        east: t.slice(7, 14),
+        north: t.slice(14, 21),
+        west: t.slice(21, 28)
+      };
+    }
+
+    function findSixSixOwner(hands) {
+      for (const p of PLAYERS) {
+        if (hands[p].some(t => t[0] === 6 && t[1] === 6)) return p;
+      }
+      return 'south';
+    }
+
+    function canPlayOnSide(state, tile, side) {
+      const end = side === 'left' ? state.leftEnd : state.rightEnd;
+      if (end === null) return false;
+      return tile[0] === end || tile[1] === end;
+    }
+
+    function getPlayableSides(state, tile) {
+      if (state.board.length === 0) {
+        // Primeira mão: só 6-6 pode abrir.
+        // Mãos seguintes: vencedor da anterior pode jogar qualquer pedra (prefere doublé alto).
+        if (handNum === 1) {
+          return tile[0] === 6 && tile[1] === 6 ? ['start'] : [];
+        }
+        return ['start'];
+      }
+      const sides = [];
+      if (canPlayOnSide(state, tile, 'left')) sides.push('left');
+      if (canPlayOnSide(state, tile, 'right')) sides.push('right');
+      return sides;
+    }
+
+    function hasAnyPlay(state, hand) {
+      if (state.board.length === 0) {
+        if (handNum === 1) return hand.some(t => t[0] === 6 && t[1] === 6);
+        return hand.length > 0;
+      }
+      return hand.some(t => getPlayableSides(state, t).length > 0);
+    }
+
+    function endScoreValue(state, side) {
+      if (state.board.length === 0) return 0;
+      if (state.board.length === 1) {
+        const t = state.board[0].tile;
+        return t[0] + t[1];
+      }
+      const entry = side === 'left' ? state.board[0] : state.board[state.board.length - 1];
+      const tile = entry.tile;
+      if (tile[0] === tile[1]) return tile[0] + tile[1];
+      return side === 'left' ? state.leftEnd : state.rightEnd;
+    }
+
+    function calcEndsSum(state) {
+      if (state.board.length === 0) return 0;
+      if (state.board.length === 1) {
+        const t = state.board[0].tile;
+        return t[0] + t[1];
+      }
+      return endScoreValue(state, 'left') + endScoreValue(state, 'right');
+    }
+
+    function endsSumToPoints(sum) {
+      return sum > 0 && sum % 5 === 0 ? sum / 5 : 0;
+    }
+
+    function simulateEndsSum(state, tile, side) {
+      if (side === 'start') return tile[0] + tile[1];
+      const tempBoard = [...state.board];
+      let tempLeft = state.leftEnd, tempRight = state.rightEnd;
+      if (side === 'left') {
+        const match = tempLeft;
+        const newEnd = tile[0] === match ? tile[1] : tile[0];
+        tempBoard.unshift({ tile, leftPip: newEnd, rightPip: match });
+        tempLeft = newEnd;
+      } else {
+        const match = tempRight;
+        const newEnd = tile[0] === match ? tile[1] : tile[0];
+        tempBoard.push({ tile, leftPip: match, rightPip: newEnd });
+        tempRight = newEnd;
+      }
+      const fakeState = { ...state, board: tempBoard, leftEnd: tempLeft, rightEnd: tempRight };
+      return calcEndsSum(fakeState);
+    }
+
+    function getNextPlayer(current) {
+      const idx = PLAYERS.indexOf(current);
+      return PLAYERS[(idx + 1) % 4];
+    }
+
+    function chooseAIPlay(state, player) {
+      const hand = state.hands[player];
+      if (state.board.length === 0) {
+        if (handNum === 1) {
+          // Primeira mão: precisa do 6-6
+          const idx = hand.findIndex(t => t[0] === 6 && t[1] === 6);
+          return idx >= 0 ? { tileIndex: idx, side: 'start' } : null;
+        }
+        // Mãos seguintes: vencedor escolhe melhor pedra inicial (carroça mais alta, ou maior pedra)
+        let bestIdx = 0;
+        let bestScore = -1;
+        hand.forEach((tile, idx) => {
+          const isDouble = tile[0] === tile[1];
+          const pipSum = tile[0] + tile[1];
+          // Carroça vale muito mais; entre carroças, a mais alta
+          const score = (isDouble ? 100 : 0) + pipSum;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = idx;
+          }
+        });
+        return { tileIndex: bestIdx, side: 'start' };
+      }
+      const plays = [];
+      hand.forEach((tile, tileIndex) => {
+        const sides = getPlayableSides(state, tile);
+        sides.forEach(side => {
+          if (side === 'start') return;
+          const endsSum = simulateEndsSum(state, tile, side);
+          plays.push({
+            tileIndex, tile, side,
+            scoreGained: endsSumToPoints(endsSum),
+            pipSum: tile[0] + tile[1],
+            isDouble: tile[0] === tile[1]
+          });
+        });
+      });
+      if (plays.length === 0) return null;
+      plays.sort((a, b) => {
+        if (a.scoreGained !== b.scoreGained) return b.scoreGained - a.scoreGained;
+        if (a.isDouble !== b.isDouble) return Number(b.isDouble) - Number(a.isDouble);
+        return b.pipSum - a.pipSum;
+      });
+      return { tileIndex: plays[0].tileIndex, side: plays[0].side };
+    }
+
+    function createInitialState(scoreUs, scoreThem, hNum, starter) {
+      const hands = dealTiles();
+      const actualStarter = starter ?? findSixSixOwner(hands);
+      const startedByWinning = starter !== null && starter !== undefined;
+      return {
+        hands,
+        board: [],
+        leftEnd: null,
+        rightEnd: null,
+        turn: actualStarter,
+        starter: actualStarter,
+        consecutivePasses: 0,
+        gameOver: false,
+        scoreUs,
+        scoreThem,
+        selectedIndex: null,
+        awaitingChoice: null,
+        lastPlayedKey: null,
+        log: hNum === 1
+          ? NAME[actualStarter] + ' começa com o 6-6'
+          : (startedByWinning
+              ? NAME[actualStarter] + ' começa a mão ' + hNum + ' — escolha qualquer pedra'
+              : NAME[actualStarter] + ' começa a mão ' + hNum + ' (tem o 6-6)'),
+        modalContent: null,
+        thinking: null,
+        crown: null,        // quem tem a coroa (último a jogar uma pedra)
+        passes: { south: 0, north: 0, east: 0, west: 0 }  // passes tomados na mão
+      };
+    }
+
+    // ============================================================
+    // INDICADOR DE PENSANDO (embutido na mesa, não flutuante)
+    // ============================================================
+    let thinkingEl = null;
+
+    function showThinking(player) {
+      // Apenas atualiza a variável; o render já vai usar S.thinking
+      S.thinking = player;
+      render();
+    }
+
+    function hideThinking() {
+      if (S) S.thinking = null;
+      // Remove qualquer elemento legado
+      const old = document.getElementById('thinking-bubble');
+      if (old) old.remove();
+      thinkingEl = null;
+    }
+
+    // Avança para o próximo turno após um delay; dispara IA se necessário
+    function advanceTurn(delayMs) {
+      setTimeout(() => {
+        if (S.gameOver) return;
+        S.turn = getNextPlayer(S.turn);
+        render();
+        if (S.turn !== 'south') scheduleAI();
+      }, delayMs);
+    }
+
+    // Agenda IA com delay humano (1.4-2.4s) e indicador de pensando
+    function scheduleAI() {
+      if (S.gameOver) return;
+      const player = S.turn;
+      const delay = 1400 + Math.random() * 1000;
+      // Mostra bolinhas após 300ms
+      setTimeout(() => {
+        if (S && !S.gameOver && S.turn === player) showThinking(player);
+      }, 300);
+      setTimeout(() => {
+        if (S) { S.thinking = null; }
+        if (S && !S.gameOver && S.turn === player) aiTurn();
+      }, delay);
+    }
+
+    // ============================================================
+    // AÇÕES (mutações de estado)
+    // ============================================================
+    function playTile(player, tileIndex, side) {
+      const tile = S.hands[player][tileIndex];
+      const key = tile[0] + '-' + tile[1] + '-' + Date.now();
+      const newHand = [...S.hands[player].slice(0, tileIndex), ...S.hands[player].slice(tileIndex + 1)];
+
+      if (side === 'start') {
+        S.board = [{ tile, leftPip: tile[0], rightPip: tile[1], key }];
+        S.leftEnd = tile[0];
+        S.rightEnd = tile[1];
+      } else if (side === 'left') {
+        const match = S.leftEnd;
+        const newEnd = tile[0] === match ? tile[1] : tile[0];
+        S.board = [{ tile, leftPip: newEnd, rightPip: match, key }, ...S.board];
+        S.leftEnd = newEnd;
+      } else {
+        const match = S.rightEnd;
+        const newEnd = tile[0] === match ? tile[1] : tile[0];
+        S.board = [...S.board, { tile, leftPip: match, rightPip: newEnd, key }];
+        S.rightEnd = newEnd;
+      }
+
+      S.hands = { ...S.hands, [player]: newHand };
+      S.lastPlayedKey = key;
+      S.consecutivePasses = 0;
+      // Coroa: quem abre a mão recebe. Depois só muda quando o dono passa.
+      if (S.crown === null) S.crown = player;
+
+      const endsSum = calcEndsSum(S);
+      const scoreGained = endsSumToPoints(endsSum);
+      const team = TEAM[player];
+
+      if (scoreGained > 0) {
+        if (team === 'us') S.scoreUs += scoreGained;
+        else S.scoreThem += scoreGained;
+        triggerPointsFlash(scoreGained, team);
+      }
+
+      const tileStr = tile[0] + '|' + tile[1];
+      const sideLabel = side === 'start' ? '' : (side === 'left' ? ' (esquerda)' : ' (direita)');
+      if (scoreGained > 0) {
+        S.log = NAME[player] + ' jogou ' + tileStr + sideLabel + ' — quina! ' + (team === 'us' ? 'Nós' : 'Eles') + ' +' + scoreGained + ' pt' + (scoreGained > 1 ? 's' : '');
+      } else {
+        S.log = NAME[player] + ' jogou ' + tileStr + sideLabel + ' (pontas somam ' + endsSum + ')';
+      }
+
+      S.selectedIndex = null;
+      S.awaitingChoice = null;
+      render();
+
+      // Verifica bate antes de avançar turno
+      if (S.hands[player].length === 0) {
+        endHand('bate', player);
+        return;
+      }
+      // Verifica placar
+      if (S.scoreUs >= TARGET_SCORE || S.scoreThem >= TARGET_SCORE) {
+        endMatch();
+        return;
+      }
+
+      advanceTurn(400);
+    }
+
+    function passPlayer(player) {
+      S.consecutivePasses++;
+      S.passes[player]++;
+      // Se o dono da coroa passou, a coroa vai direto pro próximo na ordem
+      if (S.crown === player) {
+        S.crown = getNextPlayer(player);
+      }
+      S.log = NAME[player] + ' passou a vez';
+      render();
+      if (S.consecutivePasses >= 4) {
+        endHand('trancado');
+        return;
+      }
+      advanceTurn(400);
+    }
+
+    function aiTurn() {
+      if (S.gameOver) return;
+      const player = S.turn;
+      const hand = S.hands[player];
+      if (!hasAnyPlay(S, hand)) {
+        passPlayer(player);
+        return;
+      }
+      const choice = chooseAIPlay(S, player);
+      if (choice) {
+        playTile(player, choice.tileIndex, choice.side);
+      } else {
+        passPlayer(player);
+      }
+    }
+
+    function endHand(reason, winner) {
+      S.gameOver = true;
+      let title, msg;
+      lastHandWinner = null;
+
+      if (reason === 'bate') {
+        const winTeam = TEAM[winner];
+        lastHandWinner = winner;
+        let oppPips = 0;
+        for (const p of PLAYERS) {
+          if (TEAM[p] !== winTeam) {
+            oppPips += S.hands[p].reduce((s, t) => s + t[0] + t[1], 0);
+          }
+        }
+        const bonus = Math.floor(oppPips / 5);
+        if (winTeam === 'us') S.scoreUs += bonus;
+        else S.scoreThem += bonus;
+        title = NAME[winner] + ' fechou o jogo!';
+        msg = 'Pedras dos adversários: <strong>' + oppPips + ' pips</strong><br>'
+            + 'Bônus: <strong>+' + bonus + ' pt' + (bonus !== 1 ? 's' : '') + '</strong>'
+            + '<br><br><span style="color:var(--color-accent-gold);font-weight:600;">🎯 ' + NAME[winner] + ' fechou — começa a próxima mão</span>'
+            + '<br><br>Placar: ' + S.scoreUs + ' × ' + S.scoreThem;
+        if (bonus > 0) triggerPointsFlash(bonus, winTeam);
+      } else {
+        // TRANCADO: a coroa (quem jogou por último) ganha a mão para sua dupla.
+        // Se não há coroa (ninguém jogou nenhuma pedra — raríssimo), conta pips.
+        const crownPlayer = S.crown;
+        const pipsSouth = S.hands.south.reduce((s, t) => s + t[0] + t[1], 0);
+        const pipsNorth = S.hands.north.reduce((s, t) => s + t[0] + t[1], 0);
+        const pipsEast  = S.hands.east.reduce((s, t)  => s + t[0] + t[1], 0);
+        const pipsWest  = S.hands.west.reduce((s, t)  => s + t[0] + t[1], 0);
+        const sumUs   = pipsSouth + pipsNorth;
+        const sumThem = pipsEast  + pipsWest;
+
+        if (crownPlayer) {
+          // A coroa define o vencedor — a dupla da coroa ganha os pips dos adversários
+          const crownTeam = TEAM[crownPlayer];
+          const oppSum = crownTeam === 'us' ? sumThem : sumUs;
+          const bonus = Math.floor(oppSum / 5);
+          if (crownTeam === 'us') S.scoreUs += bonus;
+          else S.scoreThem += bonus;
+          // Quem tem a coroa começa a próxima mão
+          lastHandWinner = crownPlayer;
+          const crownLabel = crownTeam === 'us' ? 'Vocês ganharam' : 'Eles ganharam';
+          title = 'Jogo trancado — ' + crownLabel + ' a mão (coroa: ' + NAME[crownPlayer] + ')';
+          msg = 'Soma: nós <strong>' + sumUs + '</strong>, eles <strong>' + sumThem + '</strong>'
+              + '<br>Bônus: <strong>+' + bonus + ' pt' + (bonus !== 1 ? 's' : '') + '</strong>'
+              + '<br><br><span style="color:var(--color-accent-gold);font-weight:600;">👑 ' + NAME[crownPlayer] + ' tem a coroa — começa a próxima mão</span>'
+              + '<br><br>Placar: ' + S.scoreUs + ' × ' + S.scoreThem;
+          if (bonus > 0) triggerPointsFlash(bonus, crownTeam);
+        } else {
+          // Fallback sem coroa: conta pips
+          if (sumUs < sumThem) {
+            const bonus = Math.floor(sumThem / 5);
+            S.scoreUs += bonus;
+            lastHandWinner = pipsSouth <= pipsNorth ? 'south' : 'north';
+            title = 'Jogo trancado — vocês ganharam';
+            msg = 'Soma: nós <strong>' + sumUs + '</strong>, eles <strong>' + sumThem + '</strong><br>Bônus: <strong>+' + bonus + ' pt' + (bonus !== 1 ? 's' : '') + '</strong><br><br><span style="color:var(--color-accent-gold);font-weight:600;">' + NAME[lastHandWinner] + ' começa a próxima mão</span><br><br>Placar: ' + S.scoreUs + ' × ' + S.scoreThem;
+            if (bonus > 0) triggerPointsFlash(bonus, 'us');
+          } else if (sumThem < sumUs) {
+            const bonus = Math.floor(sumUs / 5);
+            S.scoreThem += bonus;
+            lastHandWinner = pipsEast <= pipsWest ? 'east' : 'west';
+            title = 'Jogo trancado — eles ganharam';
+            msg = 'Soma: nós <strong>' + sumUs + '</strong>, eles <strong>' + sumThem + '</strong><br>Bônus: <strong>+' + bonus + ' pt' + (bonus !== 1 ? 's' : '') + '</strong> para eles<br><br><span style="color:var(--color-accent-gold);font-weight:600;">' + NAME[lastHandWinner] + ' começa a próxima mão</span><br><br>Placar: ' + S.scoreUs + ' × ' + S.scoreThem;
+            if (bonus > 0) triggerPointsFlash(bonus, 'them');
+          } else {
+            title = 'Jogo trancado — empate';
+            msg = 'Ambas duplas com <strong>' + sumUs + ' pips</strong>. Sem bônus.<br><br>Placar: ' + S.scoreUs + ' × ' + S.scoreThem;
+          }
+        }
+      }
+
+      render();
+
+      if (S.scoreUs >= TARGET_SCORE || S.scoreThem >= TARGET_SCORE) {
+        setTimeout(() => endMatch(), 1500);
+      } else {
+        setTimeout(() => {
+          S.modalContent = { type: 'hand-end', title, msg };
+          render();
+        }, 1500);
+      }
+    }
+
+    function endMatch() {
+      const winner = S.scoreUs > S.scoreThem ? 'us' : 'them';
+      setTimeout(() => {
+        S.modalContent = {
+          type: 'match-end',
+          title: winner === 'us' ? '🏆 Vocês venceram!' : 'Eles venceram',
+          msg: 'Placar final: <strong>' + S.scoreUs + ' × ' + S.scoreThem + '</strong>'
+        };
+        render();
+      }, 800);
+    }
+
+    function triggerPointsFlash(pts, team) {
+      const flash = document.createElement('div');
+      flash.className = 'points-flash points-flash--' + team;
+      flash.textContent = '+' + pts + ' ' + (team === 'us' ? 'Nós' : 'Eles');
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 1500);
+    }
+
+    // ============================================================
+    // RENDERIZAÇÃO
+    // ============================================================
+    function renderPips(n) {
+      const filled = new Set(PIP_POSITIONS[n]);
+      let h = '<div class="tile__pips">';
+      for (let i = 0; i < 9; i++) {
+        h += '<span class="tile__pip' + (filled.has(i) ? '' : ' tile__pip--inv') + '"></span>';
+      }
+      return h + '</div>';
+    }
+
+    function renderTile(tile, opts = {}) {
+      const { horizontal = false, size = 'md', clickable = false, selected = false, disabled = false, isLast = false, onClick = '' } = opts;
+      const cls = ['tile', 'tile--' + size, horizontal ? 'tile--h' : 'tile--v'];
+      if (clickable) cls.push('tile--click');
+      if (selected) cls.push('tile--selected');
+      if (disabled) cls.push('tile--disabled');
+      if (isLast) cls.push('tile--last');
+      const click = clickable && !disabled ? ' onclick="' + onClick + '"' : '';
+      return '<div class="' + cls.join(' ') + '"' + click + ' role="img" aria-label="Pedra ' + tile[0] + ' - ' + tile[1] + '">' +
+        '<div class="tile__half">' + renderPips(tile[0]) + '</div>' +
+        '<div class="tile__half">' + renderPips(tile[1]) + '</div>' +
+        '</div>';
+    }
+
+    function renderBack(size = 'sm', horizontal = false) {
+      return '<div class="tile tile--back tile--' + size + ' ' + (horizontal ? 'tile--h' : 'tile--v') + '"></div>';
+    }
+
+    function renderBoard() {
+      if (S.board.length === 0) {
+        const emptyMsg = handNum === 1
+          ? 'Quem tem o 6-6 começa'
+          : (S.turn === 'south' ? 'Escolha qualquer pedra para abrir' : NAME[S.turn] + ' vai abrir a mão');
+        return '<div class="board board--empty"><div class="board__empty">Mesa vazia<span>' + emptyMsg + '</span></div></div>';
+      }
+      let size;
+      if (S.board.length <= 8) size = 'lg';
+      else if (S.board.length <= 16) size = 'md';
+      else size = 'sm';
+      const perLine = size === 'lg' ? 7 : size === 'md' ? 9 : 12;
+
+      const lines = [];
+      for (let i = 0; i < S.board.length; i += perLine) {
+        lines.push(S.board.slice(i, i + perLine));
+      }
+
+      let html = '<div class="board">';
+      lines.forEach((line, lineIdx) => {
+        const reversed = lineIdx % 2 === 1;
+        const display = reversed ? [...line].reverse() : line;
+        html += '<div class="board__line">';
+        display.forEach(entry => {
+          const t = entry.tile;
+          const isLast = entry.key === S.lastPlayedKey;
+          const isDouble = t[0] === t[1];
+          if (isDouble) {
+            html += renderTile(t, { horizontal: false, size, isLast });
+          } else {
+            let displayTile;
+            if (reversed) {
+              displayTile = entry.leftPip === t[0] ? [t[1], t[0]] : t;
+            } else {
+              displayTile = entry.leftPip === t[0] ? t : [t[1], t[0]];
+            }
+            html += renderTile(displayTile, { horizontal: true, size, isLast });
+          }
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function renderOpponent(player, orientation) {
+      const count = S.hands[player].length;
+      const active = S.turn === player && !S.gameOver;
+      const thinking = S.thinking === player;
+      const hasCrown = S.crown === player;
+      let label;
+      if (player === 'north') label = 'Norte · parceiro';
+      else if (player === 'east') label = 'Leste';
+      else label = 'Oeste';
+      const cls = ['opp', 'opp--' + orientation, active ? 'opp--active' : ''].filter(Boolean).join(' ');
+      const tilesHorizontal = orientation === 'vertical';
+      let tilesHtml = '';
+      for (let i = 0; i < count; i++) {
+        tilesHtml += renderBack('sm', tilesHorizontal);
+      }
+      const thinkingHtml = thinking
+        ? '<div class="opp__thinking"><span></span><span></span><span></span></div>'
+        : '';
+      const crownHtml = hasCrown ? '<span class="opp__crown" title="Última a jogar">👑</span>' : '';
+      const passesHtml = S.passes[player] > 0
+        ? '<span class="opp__passes" title="Passes tomados">' + S.passes[player] + 'p</span>'
+        : '';
+      return '<div class="' + cls + '">' +
+        '<div class="opp__header">' +
+          '<span class="opp__label">' + label + '</span>' +
+          crownHtml + passesHtml +
+        '</div>' +
+        thinkingHtml +
+        '<div class="opp__tiles">' + tilesHtml + '</div>' +
+        '</div>';
+    }
+
+    function renderPlayerHand() {
+      if (S.hands.south.length === 0) {
+        return '<div class="player-hand player-hand--empty"><span>Você bateu! 🎉</span></div>';
+      }
+      const playable = new Set();
+      if (S.turn === 'south' && !S.gameOver) {
+        S.hands.south.forEach((tile, i) => {
+          if (S.board.length === 0) {
+            // Mão 1: só o 6-6 abre. Mão 2+: vencedor pode jogar qualquer pedra
+            if (handNum === 1) {
+              if (tile[0] === 6 && tile[1] === 6) playable.add(i);
+            } else {
+              playable.add(i); // todas jogáveis pra abrir
+            }
+          } else if (getPlayableSides(S, tile).length > 0) {
+            playable.add(i);
+          }
+        });
+      }
+      let html = '<div class="player-hand">';
+      const crownSouth = S.crown === 'south' ? ' 👑' : '';
+      const passesSouth = S.passes.south > 0 ? ' <span class="player-passes">' + S.passes.south + ' passe' + (S.passes.south > 1 ? 's' : '') + '</span>' : '';
+      html += '<div class="player-hand__label">Sua mão (Sul)' + crownSouth + passesSouth + '</div>';
+      html += '<div class="player-hand__tiles">';
+      S.hands.south.forEach((tile, i) => {
+        const isMyTurn = S.turn === 'south' && !S.gameOver;
+        html += renderTile(tile, {
+          size: 'md',
+          clickable: isMyTurn,
+          selected: S.selectedIndex === i,
+          disabled: isMyTurn && !playable.has(i),
+          onClick: 'selectTile(' + i + ')'
+        });
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderScoreboard() {
+      const pctUs = Math.min(100, (S.scoreUs / TARGET_SCORE) * 100);
+      const pctThem = Math.min(100, (S.scoreThem / TARGET_SCORE) * 100);
+      return '<div class="scoreboard">' +
+        '<div class="scoreboard__card scoreboard__card--us">' +
+        '<div class="scoreboard__label">Nós · Você + Norte</div>' +
+        '<div class="scoreboard__value">' + S.scoreUs + '</div>' +
+        '<div class="scoreboard__target">de ' + TARGET_SCORE + '</div>' +
+        '<div class="scoreboard__bar"><div class="scoreboard__bar-fill scoreboard__bar-fill--us" style="width:' + pctUs + '%"></div></div>' +
+        '</div>' +
+        '<div class="scoreboard__card scoreboard__card--them">' +
+        '<div class="scoreboard__label">Eles · Leste + Oeste</div>' +
+        '<div class="scoreboard__value">' + S.scoreThem + '</div>' +
+        '<div class="scoreboard__target">de ' + TARGET_SCORE + '</div>' +
+        '<div class="scoreboard__bar"><div class="scoreboard__bar-fill scoreboard__bar-fill--them" style="width:' + pctThem + '%"></div></div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function renderEnds() {
+      if (S.board.length === 0) return '';
+      const sum = calcEndsSum(S);
+      const pts = endsSumToPoints(sum);
+      const isQuina = pts > 0;
+      const ptsLabel = isQuina ? ' = ' + pts + ' pt' + (pts > 1 ? 's' : '') : '';
+      return '<div class="game-screen__ends">' +
+        '<span class="game-screen__end">Esq <strong>' + S.leftEnd + '</strong></span>' +
+        '<span class="game-screen__end">Dir <strong>' + S.rightEnd + '</strong></span>' +
+        '<span class="game-screen__sum' + (isQuina ? ' game-screen__sum--quina' : '') + '">Soma ' + sum + ptsLabel + '</span>' +
+        '</div>';
+    }
+
+    function renderChoice() {
+      if (!S.awaitingChoice) return '';
+      let html = '<div class="choice"><span class="choice__label">Onde colocar?</span><div class="choice__buttons">';
+      if (S.awaitingChoice.options.includes('left')) {
+        html += '<button onclick="chooseSide(\'left\')">← Esquerda (' + S.leftEnd + ')</button>';
+      }
+      if (S.awaitingChoice.options.includes('right')) {
+        html += '<button onclick="chooseSide(\'right\')">Direita (' + S.rightEnd + ') →</button>';
+      }
+      html += '<button class="choice__cancel" onclick="cancelChoice()">Cancelar</button>';
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderModal() {
+      if (!S.modalContent) return '';
+      const isMatch = S.modalContent.type === 'match-end';
+      const primaryLabel = isMatch ? 'Nova partida' : 'Próxima mão';
+      const primaryAction = isMatch ? 'newMatch()' : 'nextHand()';
+      let secondaryHtml = '';
+      if (isMatch) {
+        secondaryHtml = '<button class="modal__btn modal__btn--secondary" onclick="goToMenu()">Menu</button>';
+      }
+      return '<div class="modal-bg" onclick="if(event.target===this){' + primaryAction + '}">' +
+        '<div class="modal">' +
+        '<h3>' + S.modalContent.title + '</h3>' +
+        '<p>' + S.modalContent.msg + '</p>' +
+        '<div class="modal__actions">' +
+        secondaryHtml +
+        '<button class="modal__btn modal__btn--primary" onclick="' + primaryAction + '" autofocus>' + primaryLabel + '</button>' +
+        '</div>' +
+        '</div></div>';
+    }
+
+    function renderGameScreen() {
+      const canPass = S.turn === 'south' && !S.gameOver && !hasAnyPlay(S, S.hands.south);
+      const turnText = S.gameOver ? 'Fim da mão' : (S.turn === 'south' ? '🎯 Sua vez' : 'Vez de ' + NAME[S.turn]);
+
+      return '<div class="game-screen">' +
+        '<header class="game-screen__header">' +
+        '<button class="game-screen__back" onclick="goToMenu()" aria-label="Voltar ao menu">←</button>' +
+        '<div class="game-screen__title">Ponto de Quina</div>' +
+        '<div style="width:36px"></div>' +
+        '</header>' +
+        renderScoreboard() +
+        '<div class="game-screen__status">' +
+        '<span class="game-screen__chip">5 pips = 1 pt</span>' +
+        '<span class="game-screen__turn">' + turnText + '</span>' +
+        '<span class="game-screen__chip">Mão ' + handNum + '</span>' +
+        '</div>' +
+        '<div class="game-screen__table">' +
+        '<div class="game-screen__table-row game-screen__table-row--top">' + renderOpponent('north', 'horizontal') + '</div>' +
+        '<div class="game-screen__table-row game-screen__table-row--middle">' +
+        renderOpponent('west', 'vertical') +
+        '<div class="game-screen__board-wrap">' + renderBoard() + '</div>' +
+        renderOpponent('east', 'vertical') +
+        '</div>' +
+        renderEnds() +
+        '</div>' +
+        '<div class="game-screen__log">' + S.log + '</div>' +
+        renderPlayerHand() +
+        renderChoice() +
+        '<div class="controls">' +
+        '<button class="ctrl-btn" onclick="passTurn()" ' + (canPass ? '' : 'disabled') + '>Passar</button>' +
+        '</div>' +
+        renderModal() +
+        '</div>';
+    }
+
+    function renderMenuScreen() {
+      return '<div class="menu">' +
+        '<div class="menu__badge">⚓ MARINHA · TRADIÇÃO</div>' +
+        '<h1 class="menu__title">Ponto<br><em>de Quina</em></h1>' +
+        '<p class="menu__subtitle">Regras navais</p>' +
+        '<div class="menu__actions">' +
+        '<button class="menu__btn menu__btn--primary" onclick="goToGame()">' +
+        '<span class="menu__btn-label">Jogar partida</span>' +
+        '<span class="menu__btn-hint">Você + Norte vs Leste + Oeste</span>' +
+        '</button>' +
+        '<button class="menu__btn" onclick="goToRules()">Como se joga</button>' +
+        '<button class="menu__btn menu__btn--disabled" disabled>Ranking <span class="menu__soon">em breve</span></button>' +
+        '<button class="menu__btn menu__btn--disabled" disabled>Multiplayer online <span class="menu__soon">em breve</span></button>' +
+        '</div>' +
+        '<footer class="menu__footer"><span>v0.1.0</span><span>·</span><span>HTML standalone</span></footer>' +
+        '</div>';
+    }
+
+    function renderRulesScreen() {
+      return '<div class="rules">' +
+        '<header class="rules__header">' +
+        '<button class="rules__back" onclick="goToMenu()">← Voltar</button>' +
+        '<h1 class="rules__title">Como se joga</h1>' +
+        '</header>' +
+        '<article class="rules__content">' +
+        '<section class="rules__section"><h2>O jogo</h2><p>4 jogadores em duplas, posições alternadas. Você (Sul) joga com o Norte contra Leste e Oeste. Cada um recebe 7 das 28 pedras.</p></section>' +
+        '<section class="rules__section"><h2>Quem começa</h2><p>Quem tem a <strong>pedra 6-6</strong> abre o jogo na primeira mão. Nas seguintes, quem bateu (ou ganhou a mão trancada) começa.</p></section>' +
+        '<section class="rules__section"><h2>Pontuação na quina</h2><p>A cada jogada, soma-se as duas pontas expostas da mesa. Quando a soma for múltiplo de 5, a dupla que jogou marca <strong>1 ponto para cada 5</strong>:</p>' +
+        '<ul class="rules__list">' +
+        '<li>Soma 5 → <strong>1 pt</strong></li>' +
+        '<li>Soma 10 → <strong>2 pts</strong></li>' +
+        '<li>Soma 15 → <strong>3 pts</strong></li>' +
+        '<li>Soma 20 → <strong>4 pts</strong></li>' +
+        '<li>Soma 25 → <strong>5 pts</strong></li>' +
+        '<li>Soma 30 → <strong>6 pts</strong></li>' +
+        '</ul>' +
+        '<p style="font-size:12px;color:var(--color-text-muted);font-style:italic;border-top:1px dashed var(--color-border);padding-top:10px;margin-top:10px;">Carroças (duplas) na ponta contam o valor total: 5-5 vale 10, 6-6 vale 12.</p>' +
+        '</section>' +
+        '<section class="rules__section"><h2>Como termina a mão</h2><p><strong>Bate:</strong> quem ficar sem pedras primeiro. A dupla soma os pips dos adversários, divide por 5, e marca.</p><p><strong>Trancado:</strong> ninguém pode jogar. A dupla com menos pips na mão marca os pips adversários divididos por 5.</p></section>' +
+        '<section class="rules__section"><h2>Vitória</h2><p>Vence a dupla que atingir <strong>30 pontos</strong> primeiro.</p></section>' +
+        '</article>' +
+        '<button class="rules__cta" onclick="goToGame()">Começar partida</button>' +
+        '</div>';
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      if (currentScreen === 'menu') {
+        app.innerHTML = renderMenuScreen();
+      } else if (currentScreen === 'rules') {
+        app.innerHTML = renderRulesScreen();
+      } else if (currentScreen === 'game') {
+        app.innerHTML = renderGameScreen();
+      }
+    }
+
+    // ============================================================
+    // AÇÕES DO JOGADOR (globais para onclick)
+    // ============================================================
+    function selectTile(idx) {
+      if (S.turn !== 'south' || S.gameOver) return;
+      const tile = S.hands.south[idx];
+      const sides = getPlayableSides(S, tile);
+      if (sides.length === 0) {
+        S.log = 'A pedra ' + tile[0] + '|' + tile[1] + ' não encaixa em nenhuma ponta';
+        render();
+        return;
+      }
+      if (sides.length === 1) {
+        playTile('south', idx, sides[0]);
+      } else {
+        S.selectedIndex = idx;
+        S.awaitingChoice = { tileIndex: idx, options: sides };
+        S.log = 'Escolha em qual ponta colocar a pedra';
+        render();
+      }
+    }
+
+    function chooseSide(side) {
+      if (!S.awaitingChoice) return;
+      const idx = S.awaitingChoice.tileIndex;
+      playTile('south', idx, side);
+    }
+
+    function cancelChoice() {
+      S.selectedIndex = null;
+      S.awaitingChoice = null;
+      render();
+    }
+
+    function passTurn() {
+      if (S.turn !== 'south' || S.gameOver) return;
+      if (hasAnyPlay(S, S.hands.south)) {
+        S.log = 'Você tem jogadas disponíveis. Não pode passar.';
+        render();
+        return;
+      }
+      passPlayer('south');
+    }
+
+    function newMatch() {
+      hideThinking();
+      handNum = 1;
+      lastHandWinner = null;
+      S = createInitialState(0, 0, 1, null);
+      render();
+      if (S.turn !== 'south') scheduleAI();
+    }
+
+    function nextHand() {
+      hideThinking();
+      handNum++;
+      S = createInitialState(S.scoreUs, S.scoreThem, handNum, lastHandWinner);
+      render();
+      if (S.turn !== 'south') scheduleAI();
+    }
+
+    function confirmNewMatch() {
+      if (confirm('Começar uma nova partida? O placar atual será perdido.')) {
+        newMatch();
+      }
+    }
+
+    function goToMenu() {
+      hideThinking();
+      currentScreen = 'menu';
+      render();
+    }
+
+    function goToRules() {
+      hideThinking();
+      currentScreen = 'rules';
+      render();
+    }
+
+    function goToGame() {
+      hideThinking();
+      currentScreen = 'game';
+      if (!S || S.scoreUs >= TARGET_SCORE || S.scoreThem >= TARGET_SCORE) {
+        newMatch();
+      } else {
+        render();
+        if (S.turn !== 'south' && !S.gameOver) scheduleAI();
+      }
+    }
+
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
+    render();
+  </script>
+</body>
+</html>
